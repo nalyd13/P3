@@ -113,8 +113,6 @@ for(count1=0;count1<26;count1++) {
 	}
 }
 
-
-
 cout << "is the letter " << "'" << tried[guess_index] << "'" << " in the word? (y/n)" << endl;
 cin >> in_word;
 
