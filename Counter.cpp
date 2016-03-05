@@ -55,6 +55,7 @@ while(in_s >> word){
 	}
 }
 
+in_s.close();
 
 while(run){
 
@@ -103,7 +104,7 @@ for(i=0;i<26;i++){
 	cout << endl;
 }
 
-cout << max_letter_count << endl;
+cout << "max letter count: " << max_letter_count << endl;
 
 for(count1=0;count1<26;count1++) {
 	if(alphaCount[count1] == max_letter_count) {
@@ -182,7 +183,5 @@ if(miss == 6 || word_count == 1){
 }
 
 }
-
-in_s.close();
 
 }
