@@ -31,7 +31,7 @@ int guess_index = 0; // running number of guesses
 int miss = 0; // number of missed guesses
 
 string in_word; // decision variable for whether or not (y/n) the letter is in the word
-int correct_letter_count; // position(s) of correctly guessed letters in word
+int correct_letter_count = 0; // position(s) of correctly guessed letters in word
 vector<int> position; // list of positions of correctly guessed words
 
 int tmp_position; // used to populate position vector
@@ -59,7 +59,6 @@ in_s.close();
 
 while(run){
 
-cout << Counter << endl;
 word_count = wordList.size();
 
 // count overall frequency of letters and frequency of unique letters per word
@@ -94,7 +93,7 @@ for(count1=0;count1<26;count1++) {
 
 cout << "word count: " << word_count << " " << numLetters << " letter words." << endl;
 cout << "first word: " << wordList[0] << endl;
-cout << "last word: " << wordList[word_count - 1] << endl;
+cout << "last word: " << wordList[word_count - 1] << endl << endl;
 
 
 // print all occurances of letters
@@ -131,11 +130,7 @@ if(in_word == "y"){
 		cout << position[i+positions_known] << endl;
 	}
 
-} else{
-	miss++;
-}
-
-for(i=0;i<word_count;i++) {
+	for(i=0;i<word_count;i++) {
 	test++;
 		for(j=0;j<correct_letter_count;j++){
 			if(wordList[i][position[j+positions_known]-1] == tried[guess_index]){
@@ -147,14 +142,29 @@ for(i=0;i<word_count;i++) {
 			}
 		}
 	add_word_flag = 0;
+	}
+
+} else{
+	miss++;
+	cout << "missed" << endl;
+	for(i=0;i<word_count;i++){
+		test++;
+		for(j=0;j<numLetters;j++){
+			if(wordList[i][j] != tried[guess_index]){
+				add_word_flag++;
+				if(add_word_flag == numLetters){
+        			tmp_wordList.push_back(wordList[i]);
+        			Counter1++;
+        			cout << wordList[i] << "added" << endl;
+        		}
+			}
+		}
+	add_word_flag = 0;
+	}
 }
 
-cout << endl;
-cout << test << " " << tried[guess_index] << endl;
-cout << Counter1 << " words after filter "<< guess_index+2 << endl;
 
-
-// set wordlist = to list of refined words
+// set wordlist = to list of refined words (swap vectors and reset tmp vector)
 // reset letter frequency counters and word counter
 // increment count of letters positions known and guess index
 
@@ -163,19 +173,26 @@ for(i=0;i<Counter1;i++){
 	wordList.push_back(tmp_wordList[i]);
 }
 tmp_wordList.clear();
-for(i=0;i<Counter1;i++){
-	cout << wordList[i] << endl;
-}
+
+
+cout << endl;
+cout << "new wordList count: " << wordList.size() << " words." << endl;
+cout << test-Counter1 << " words removed after guessing the letter "  << "'" << tried[guess_index] << "'" << endl;
+
+positions_known += correct_letter_count;
+guess_index++;
+
+cout << "Guesses count: " << guess_index << endl;
 
 Counter1 = 0;
+test = 0;
 max_letter_count = 0;
+
 for(i=0;i<26;i++){
 	alphaCount[i] = 0;
 	alphaWordCount[i] = 0;
 	uniqueLetterAppearance[i] = 0;
 }
-guess_index++;
-positions_known += correct_letter_count;
 
 
 if(miss == 6 || word_count == 1){
