@@ -6,6 +6,15 @@
 
 using namespace std;
 
+// if letter is found in every word (e.g. 10 words left and letter is in every word) - guess a different letter
+// if only a few words remain, and missed count is not too high, appropriate to start guessing words instead of letters
+// 		(e.g. 2 words left and missed count == 3 :: does not make sense to guess letters at this point)
+// sort everything into classes and separate files 
+// implement possibility of repeated letters ? (to maximize known positions of word and eliminate maximum possible words)
+// better handling of word filtering when word count is < 30
+
+void draw(int miss);
+
 int main() {
 
 int numLetters = 0; // length of word to be guessed
@@ -20,7 +29,7 @@ int max_letter_count = 0; // count of max letter frequency
 int positions_known = 0; // count of known positions within word
 int word_count; // number of possible words in main list 
 
-string word;
+string word; // variable used to read in words from original dictionary
 vector<string> wordList; // main list of possible words
 vector<string> tmp_wordList; // tmp list used to clear wordList and repopulate with refined words
 
@@ -30,13 +39,14 @@ char tried[26]; // array of guesses (max 26)
 int guess_index = 0; // running number of guesses
 int miss = 0; // number of missed guesses
 
+string is_word;
 string in_word; // decision variable for whether or not (y/n) the letter is in the word
 int correct_letter_count = 0; // position(s) of correctly guessed letters in word
 vector<int> position; // list of positions of correctly guessed words
 
 int tmp_position; // used to populate position vector
 
-int add_word_flag = 0; // flag to indicate if a word should be added to a newly populated wordList
+int add_word_flag = 0, add_word_flag_2 = 0; // flags to indicate if a word should be added to a newly populated wordList
 int test=0; // will deleted later
 
 
@@ -57,9 +67,9 @@ while(in_s >> word){
 
 in_s.close();
 
-while(run){
-
 word_count = wordList.size();
+
+while(run){
 
 // count overall frequency of letters and frequency of unique letters per word
 for(i=0;i<word_count;i++) {		
@@ -116,7 +126,10 @@ for(count1=0;count1<26;count1++) {
 cout << "is the letter " << "'" << tried[guess_index] << "'" << " in the word? (y/n)" << endl;
 cin >> in_word;
 
+// determine if letter to guess is in word
 if(in_word == "y"){
+
+	// if yes, obtain number of occurances and positions of letters - store positions in vector
 	cout << "How many times does the letter " << "'" << tried[guess_index] << "'" << " occur?" << endl;
 	cin >> correct_letter_count;
 	for(i=0; i < correct_letter_count; i++){
@@ -125,23 +138,38 @@ if(in_word == "y"){
 		position.push_back(tmp_position);
 
 	}
+
+	// for clarity, reiterate letter and positions via console (for testing, might be removed later)
 	cout << "The letter " << "'" << tried[guess_index] << "'" << " appears at positions: " << endl;
 	for(i=0;i<correct_letter_count;i++){
 		cout << position[i+positions_known] << endl;
 	}
 
+	// check if the letter(s) being guessed are in the correct positions(s)
 	for(i=0;i<word_count;i++) {
-	test++;
+		test++;
 		for(j=0;j<correct_letter_count;j++){
 			if(wordList[i][position[j+positions_known]-1] == tried[guess_index]){
 				add_word_flag++;
-				if(add_word_flag == correct_letter_count){
-        			tmp_wordList.push_back(wordList[i]);
-        			Counter1++;
-        		}
 			}
 		}
+
+		// make sure the letter ONLY appears in the correct position(s) 
+		for(j=0;j<numLetters;j++){
+			if(wordList[i][j] == tried[guess_index]){
+				add_word_flag_2++;
+			}
+		}
+
+		// if the letter is in the correct position(s) - and only the correct positions - add it to wordList
+		if(add_word_flag == correct_letter_count && add_word_flag_2 == correct_letter_count){
+        	tmp_wordList.push_back(wordList[i]);
+        	Counter1++;
+        }
+
 	add_word_flag = 0;
+	add_word_flag_2 = 0;
+
 	}
 
 } else{
@@ -152,10 +180,10 @@ if(in_word == "y"){
 		for(j=0;j<numLetters;j++){
 			if(wordList[i][j] != tried[guess_index]){
 				add_word_flag++;
+				// if the incorrectly guessed letter is not in the word, add word to wordList
 				if(add_word_flag == numLetters){
         			tmp_wordList.push_back(wordList[i]);
         			Counter1++;
-        			cout << wordList[i] << "added" << endl;
         		}
 			}
 		}
@@ -164,9 +192,9 @@ if(in_word == "y"){
 }
 
 
-// set wordlist = to list of refined words (swap vectors and reset tmp vector)
+// set wordlist = to list of refined words (swap wordList vectors and reset tmp vector)
 // reset letter frequency counters and word counter
-// increment count of letters positions known and guess index
+// increment count of known letter positions and guess index
 
 wordList.clear();
 for(i=0;i<Counter1;i++){
@@ -174,6 +202,8 @@ for(i=0;i<Counter1;i++){
 }
 tmp_wordList.clear();
 
+// update figure
+draw(miss);
 
 cout << endl;
 cout << "new wordList count: " << wordList.size() << " words." << endl;
@@ -182,7 +212,8 @@ cout << test-Counter1 << " words removed after guessing the letter "  << "'" << 
 positions_known += correct_letter_count;
 guess_index++;
 
-cout << "Guesses count: " << guess_index << endl;
+cout << "Guess count: " << guess_index << endl;
+cout << "Miss count: " << miss << endl;
 
 Counter1 = 0;
 test = 0;
@@ -194,11 +225,60 @@ for(i=0;i<26;i++){
 	uniqueLetterAppearance[i] = 0;
 }
 
+word_count = wordList.size();
 
 if(miss == 6 || word_count == 1){
 	run = 0;
 }
 
+if(6 - miss >= word_count){
+	for(i=0;i<word_count;i++){
+		cout << "is your word " << wordList[i] << "?" << endl;
+		cin >> is_word;
+		if(is_word == "y"){
+			i = word_count;
+			run = 0;
+		} else {
+			miss++;
+			draw(miss);
+		}
+	}	
 }
 
 }
+
+}
+
+
+void draw(int miss){
+
+switch(miss){
+
+case 0:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||            ó\n    ||\n    ||\n    ||\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;
+case 1:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||          (ಠ_ಠ)\n    ||\n    ||\n    ||\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;
+case 2:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||          (ಥ_ಥ)\n    ||            Y\n    ||            |\n    ||\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;
+case 3:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||          (Ͼ˳Ͽ)\n    ||            Y\n    ||            |\n    ||           /\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;	
+case 4:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||          (◕_◕)\n    ||            Y\n    ||            |\n    ||           / \\\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;	
+case 5:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||          (Ͼ˳Ͽ)..!!\n    ||           /Y\n    ||            |\n    ||           / \\\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;	
+case 6:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||          (x_x)\n    ||           /Y\\\n    ||            |\n    ||           / \\\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;
+case 7:
+	cout << "\n    ===============\n    ||  /         |\n    ||/           |\n    ||            0\n    ||           /Y\\\n    ||            |\n    ||           / \\\n    ||\n    ||\n    ||\n ==========================\n" << endl;
+	break;					
+
+	}
+}
+
